@@ -1,0 +1,25 @@
+// Get a presigned URL for the object.
+        // In order to get a presigned URL for an object, you must
+        // create a Presignclient
+        fmt.Println("Create Presign client")
+        presignClient := s3.NewPresignClient(client)
+
+        presignParams := &s3.GetObjectInput{
+            Bucket: aws.String("image-uploader-ali"),
+            Key:    aws.String(file.Filename),
+        }
+
+        // Apply an expiration via an option function
+        presignDuration := func(po *s3.PresignOptions) {
+            po.Expires = 5 * time.Minute
+        }
+
+
+        presignResult, err := presignClient.PresignGetObject(context.TODO(), presignParams, presignDuration)
+
+        if err != nil {
+            panic("Couldn't get presigned URL for GetObject")
+        }
+        c.HTML(http.StatusOK, "index.html", gin.H{
+            "image": presignResult.URL,
+        })
